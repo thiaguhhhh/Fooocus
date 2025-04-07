@@ -1,43 +1,26 @@
 import gradio as gr
-saved_character = {}
+import os
 
-def save_character_fn(image, prompt, seed):
-    global saved_character
-    saved_character = {
-        "image": image,
-        "prompt": prompt,
-        "seed": seed
-    }
-    print("💾 Character saved:", saved_character)
-    return "✅ Character saved!"
+SAVE_PATH = "saved_character.txt"
 
-def generate_fn(prompt, seed, use_saved):
-    if use_saved and saved_character:
-        prompt = saved_character.get("prompt", prompt)
-        seed = saved_character.get("seed", seed)
-        print("⚡ Using saved character:", prompt, seed)
+def save_character(character_description):
+    with open(SAVE_PATH, "w", encoding="utf-8") as f:
+        f.write(character_description)
+    return f"✅ Character saved!"
 
-    return f"Generated image for: '{prompt}' with seed {seed}"  # Replace with actual Fooocus function
+def load_character():
+    if os.path.exists(SAVE_PATH):
+        with open(SAVE_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
 
-with gr.Blocks() as ui:
-    prompt_input = gr.Textbox(label="Prompt", value="a futuristic warrior")
-    seed_input = gr.Number(label="Seed", value=42)
-    use_saved_checkbox = gr.Checkbox(label="Use Saved Character", value=False)
-    
-    generate_btn = gr.Button("Generate")
-    image_output = gr.Textbox(label="Output Image Placeholder")
-
+with gr.Blocks() as demo:
     with gr.Accordion("Advanced", open=False):
-        save_character_btn = gr.Button("💾 Save Character")
+        character_input = gr.Textbox(label="Character Description", value=load_character())
+        save_button = gr.Button("Save Character")
+        save_output = gr.Markdown()
 
-    generate_btn.click(
-        fn=generate_fn,
-        inputs=[prompt_input, seed_input, use_saved_checkbox],
-        outputs=[image_output]
-    )
+        save_button.click(fn=save_character, inputs=character_input, outputs=save_output)
 
-    save_character_btn.click(
-        fn=save_character_fn,
-        inputs=[image_output, prompt_input, seed_input],
-        outputs=[]
-    )
+demo.launch(share=True)
+
